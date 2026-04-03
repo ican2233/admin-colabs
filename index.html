@@ -123,6 +123,7 @@
         let currentUser = JSON.parse(localStorage.getItem('tks_session'));
         let userRecords = [];
         let editingIndex = -1;
+let editingAdminIndex = -1; // Tambahkan ini
 
         window.onload = () => { if(currentUser) showDashboard(); };
 
@@ -258,51 +259,81 @@
             document.getElementById('cancelBtn').classList.remove('hidden');
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
+        function editAdmin(index) {
+    db.ref('AdminAccount').once('value', (snapshot) => {
+        const data = snapshot.val();
+        const admins = Array.isArray(data) ? data : Object.values(data);
+        const adm = admins[index];
+        
+        editingAdminIndex = index;
+        document.getElementById('adm_email').value = adm.email;
+        document.getElementById('adm_pass').value = adm.pass;
+        document.getElementById('adm_expiry').value = adm.expiry || '';
+        
+        showToast("Mode Edit Admin Aktif");
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    });
+}
+
 
         // --- ADMIN MANAGEMENT (Only for Super Admin) ---
         function loadAdminData() {
-            db.ref('AdminAccount').on('value', (snapshot) => {
-                const list = document.getElementById('adminList');
-                list.innerHTML = '';
-                const admins = Object.values(snapshot.val() || {});
-                admins.forEach((adm, index) => {
-                    list.innerHTML += `
-                        <div class="glass-card p-4 rounded-2xl flex justify-between items-center">
-                            <div>
-                                <p class="text-[10px] font-black text-white italic">${adm.email}</p>
-                                <p class="text-[9px] opacity-40">Pass: ${adm.pass}</p>
-                            </div>
-                            <button onclick="deletePrompt('AdminAccount', ${index})" class="text-red-400 p-2 hover:bg-red-400/10 rounded-lg"><i class="fa-solid fa-user-minus"></i></button>
-                        </div>
-                    `;
-                });
-            });
-        }
+    db.ref('AdminAccount').on('value', (snapshot) => {
+        const list = document.getElementById('adminList');
+        list.innerHTML = '';
+        const data = snapshot.val();
+        const admins = Array.isArray(data) ? data : (data ? Object.values(data) : []);
+        
+        admins.forEach((adm, index) => {
+            if(!adm) return;
+            list.innerHTML += `
+                <div class="glass-card p-4 rounded-2xl flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] font-black text-white italic">${adm.email}</p>
+                        <p class="text-[9px] opacity-40">EXP: ${adm.expiry || 'No Limit'}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editAdmin(${index})" class="text-amber-400 p-2 hover:bg-amber-400/10 rounded-lg"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deletePrompt('AdminAccount', ${index})" class="text-red-400 p-2 hover:bg-red-400/10 rounded-lg"><i class="fa-solid fa-user-minus"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+    });
+}
+
 
         async function saveAdminData() {
     const email = document.getElementById('adm_email').value;
     const pass = document.getElementById('adm_pass').value;
-    const expiry = document.getElementById('adm_expiry').value; // Ambil nilai tanggal
+    const expiry = document.getElementById('adm_expiry').value;
 
-    if(!email || !pass || !expiry) return showToast("Lengkapi Email, Pass & Expired!", "error");
+    if(!email || !pass || !expiry) return showToast("Lengkapi semua data!", "error");
 
     const snapshot = await db.ref('AdminAccount').once('value');
-    let admins = snapshot.val() ? Object.values(snapshot.val()) : [];
+    let admins = snapshot.val() ? (Array.isArray(snapshot.val()) ? snapshot.val() : Object.values(snapshot.val())) : [];
     
-    const idx = admins.findIndex(a => a.email === email);
-    const newAdmin = { email, pass, expiry }; // Simpan ke objek
+    const newAdmin = { email, pass, expiry };
 
-    if(idx > -1) admins[idx] = newAdmin;
-    else admins.push(newAdmin);
+    if(editingAdminIndex > -1) {
+        admins[editingAdminIndex] = newAdmin;
+        editingAdminIndex = -1; // Reset mode edit
+    } else {
+        // Cek jika email sudah ada untuk mencegah duplikat saat tambah baru
+        const existIdx = admins.findIndex(a => a.email === email);
+        if(existIdx > -1) admins[existIdx] = newAdmin;
+        else admins.push(newAdmin);
+    }
 
     await db.ref('AdminAccount').set(admins);
-    showToast("Admin Berhasil Terdaftar");
+    showToast("Data Admin Diperbarui");
     
-    // Reset form
+    // Reset Form
     document.getElementById('adm_email').value = ''; 
     document.getElementById('adm_pass').value = '';
     document.getElementById('adm_expiry').value = '';
 }
+
 
 
         // --- UTILS ---
