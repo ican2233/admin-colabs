@@ -98,10 +98,15 @@
                 <div class="glass-card p-6 rounded-[2.5rem] shadow-2xl mb-8 border-l-8 border-amber-500">
                     <h2 class="text-amber-400 font-black text-xs mb-6 uppercase tracking-widest italic">Owner Control</h2>
                     <div class="space-y-4">
-                        <input type="email" id="adm_email" placeholder="Email Admin Baru" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
-                        <input type="text" id="adm_pass" placeholder="Password Admin Baru" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
-                        <button onclick="saveAdminData()" class="w-full bg-amber-600 p-4 rounded-2xl font-black text-xs uppercase">Tambah/Update Admin</button>
-                    </div>
+    <input type="email" id="adm_email" placeholder="Email Admin Baru" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
+    <input type="text" id="adm_pass" placeholder="Password Admin Baru" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
+    
+    <label class="text-[9px] text-amber-400 font-black ml-2 uppercase">Masa Aktif Admin</label>
+    <input type="date" id="adm_expiry" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
+    
+    <button onclick="saveAdminData()" class="w-full bg-amber-600 p-4 rounded-2xl font-black text-xs uppercase">Simpan Admin</button>
+</div>
+
                 </div>
                 <div id="adminList" class="space-y-4"></div>
             </div>
@@ -125,26 +130,32 @@
         async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const pass = document.getElementById('loginPass').value;
+    const today = new Date().toISOString().split('T')[0]; // Mendapatkan tanggal hari ini (YYYY-MM-DD)
 
     if (!email || !pass) return showToast("Isi Email & Password!", "error");
 
     const snapshot = await db.ref('AdminAccount').once('value');
     const data = snapshot.val();
-    
-    // Mengubah data firebase menjadi array agar mudah dicari
     let admins = Array.isArray(data) ? data : (data ? Object.values(data) : []);
     
-    // Cari apakah email dan pass cocok dengan data di database
     const found = admins.find(a => a && a.email === email && a.pass === pass);
 
     if (found) {
-        // Tentukan Role: Jika emailnya adalah email Anda, jadikan SUPER_ADMIN
+        // --- LOGIKA EXPIRED ---
+        // Super Admin biasanya tidak diberi expired (selamanya aktif)
+        if (email !== SUPER_ADMIN_EMAIL) {
+            if (found.expiry && today > found.expiry) {
+                return showToast("Akun Admin Expired! Hubungi Owner.", "error");
+            }
+        }
+
         const role = (email === SUPER_ADMIN_EMAIL) ? "SUPER_ADMIN" : "ADMIN";
         loginSuccess(email, role);
     } else {
         showToast("Email/Password Salah!", "error");
     }
 }
+
 
 
         function loginSuccess(email, role) {
@@ -269,21 +280,30 @@
         }
 
         async function saveAdminData() {
-            const email = document.getElementById('adm_email').value;
-            const pass = document.getElementById('adm_pass').value;
-            if(!email || !pass) return showToast("Lengkapi data admin!", "error");
+    const email = document.getElementById('adm_email').value;
+    const pass = document.getElementById('adm_pass').value;
+    const expiry = document.getElementById('adm_expiry').value; // Ambil nilai tanggal
 
-            const snapshot = await db.ref('AdminAccount').once('value');
-            let admins = snapshot.val() ? Object.values(snapshot.val()) : [];
-            
-            const idx = admins.findIndex(a => a.email === email);
-            if(idx > -1) admins[idx].pass = pass;
-            else admins.push({ email, pass });
+    if(!email || !pass || !expiry) return showToast("Lengkapi Email, Pass & Expired!", "error");
 
-            await db.ref('AdminAccount').set(admins);
-            showToast("Admin List Diupdate");
-            document.getElementById('adm_email').value = ''; document.getElementById('adm_pass').value = '';
-        }
+    const snapshot = await db.ref('AdminAccount').once('value');
+    let admins = snapshot.val() ? Object.values(snapshot.val()) : [];
+    
+    const idx = admins.findIndex(a => a.email === email);
+    const newAdmin = { email, pass, expiry }; // Simpan ke objek
+
+    if(idx > -1) admins[idx] = newAdmin;
+    else admins.push(newAdmin);
+
+    await db.ref('AdminAccount').set(admins);
+    showToast("Admin Berhasil Terdaftar");
+    
+    // Reset form
+    document.getElementById('adm_email').value = ''; 
+    document.getElementById('adm_pass').value = '';
+    document.getElementById('adm_expiry').value = '';
+}
+
 
         // --- UTILS ---
         function deletePrompt(path, index) {
