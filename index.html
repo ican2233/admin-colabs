@@ -49,6 +49,8 @@
             </div>
         </div>
     </div>
+    
+    
 
     <div id="mainContent" class="hidden">
         <header class="bg-gradient-to-r from-blue-700 to-indigo-900 p-8 shadow-2xl mb-6 rounded-b-[3rem] text-center relative">
@@ -56,11 +58,32 @@
             <h1 class="text-2xl font-black italic text-white uppercase">TKS Dashboard</h1>
             <p id="userRoleBadge" class="text-[9px] font-bold opacity-70 tracking-widest mt-1"></p>
         </header>
+        
+        <div id="broadcastTab" class="hidden">
+    <div class="glass-card p-6 rounded-[2.5rem] shadow-2xl mb-8 border-l-8 border-purple-500">
+        <h2 class="text-purple-400 font-black text-xs mb-6 uppercase tracking-widest italic">Broadcast Notification</h2>
+        <div class="space-y-4">
+            <textarea id="notif_msg" placeholder="Ketik pesan untuk semua pengguna..." class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none h-32"></textarea>
+            
+            <div class="bg-black/40 p-4 rounded-2xl border border-slate-700 flex justify-between items-center">
+                <span class="text-[10px] font-black uppercase text-slate-500">Status Notif</span>
+                <select id="notif_status" class="bg-purple-600 text-white font-bold text-[10px] px-3 py-1 rounded-lg outline-none">
+                    <option value="true">AKTIF (Muncul di App)</option>
+                    <option value="false">MATI (Sembunyikan)</option>
+                </select>
+            </div>
+            
+            <button onclick="sendBroadcast()" class="w-full bg-purple-600 p-4 rounded-2xl font-black text-xs uppercase">Update Notifikasi</button>
+        </div>
+    </div>
+</div>
+
 
         <div class="max-w-md mx-auto px-4">
             <div id="adminTabNav" class="hidden flex gap-2 mb-6">
                 <button onclick="switchTab('users')" id="tab-users" class="flex-1 p-3 rounded-2xl bg-blue-600 text-[10px] font-black uppercase italic">User Management</button>
                 <button onclick="switchTab('admins')" id="tab-admins" class="flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic">Admin Settings</button>
+                <button onclick="switchTab('broadcast')" id="tab-broadcast" class="flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic">Notif</button>
             </div>
 
             <div id="usersTab">
@@ -181,11 +204,16 @@ let editingAdminIndex = -1; // Tambahkan ini
         }
 
         function switchTab(tab) {
-            document.getElementById('usersTab').classList.toggle('hidden', tab !== 'users');
-            document.getElementById('adminsTab').classList.toggle('hidden', tab !== 'admins');
-            document.getElementById('tab-users').className = tab === 'users' ? 'flex-1 p-3 rounded-2xl bg-blue-600 text-[10px] font-black uppercase italic' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic';
-            document.getElementById('tab-admins').className = tab === 'admins' ? 'flex-1 p-3 rounded-2xl bg-amber-600 text-[10px] font-black uppercase italic' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic';
-        }
+    document.getElementById('usersTab').classList.toggle('hidden', tab !== 'users');
+    document.getElementById('adminsTab').classList.toggle('hidden', tab !== 'admins');
+    document.getElementById('broadcastTab').classList.toggle('hidden', tab !== 'broadcast'); // Tambahkan ini
+
+    // Update warna tombol
+    document.getElementById('tab-users').className = tab === 'users' ? 'flex-1 p-3 rounded-2xl bg-blue-600 text-[10px] font-black uppercase italic' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic';
+    document.getElementById('tab-admins').className = tab === 'admins' ? 'flex-1 p-3 rounded-2xl bg-amber-600 text-[10px] font-black uppercase italic' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic';
+    document.getElementById('tab-broadcast').className = tab === 'broadcast' ? 'flex-1 p-3 rounded-2xl bg-purple-600 text-[10px] font-black uppercase italic' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic';
+}
+
 
         // --- USER MANAGEMENT (For All Admins) ---
         function loadUserData() {
@@ -301,6 +329,34 @@ let editingAdminIndex = -1; // Tambahkan ini
         });
     });
 }
+
+
+async function sendBroadcast() {
+    const msg = document.getElementById('notif_msg').value;
+    const status = document.getElementById('notif_status').value === 'true';
+
+    if(!msg && status) return showToast("Pesan tidak boleh kosong!", "error");
+
+    await db.ref('app_settings/notification').set({
+        message: msg,
+        active: status,
+        updatedAt: new Date().toLocaleString()
+    });
+
+    showToast("Server diperbarui!");
+}
+
+// Tambahkan ini di loadUserData agar pesan saat ini muncul di panel saat dibuka
+function loadCurrentNotif() {
+    db.ref('app_settings/notification').once('value', (snapshot) => {
+        const data = snapshot.val();
+        if(data) {
+            document.getElementById('notif_msg').value = data.message || '';
+            document.getElementById('notif_status').value = String(data.active);
+        }
+    });
+}
+
 
 
         async function saveAdminData() {
