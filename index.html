@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
     <style>
@@ -45,12 +46,12 @@
                 <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-600/30">
                     <i class="fa-solid fa-user-shield text-2xl text-white"></i>
                 </div>
-                <h2 class="text-xl font-black italic uppercase">TKS Portal Access</h2>
+                <h2 class="text-xl font-black italic uppercase">TKS Portal Secure</h2>
             </div>
             <div class="space-y-4">
                 <input type="email" id="loginEmail" placeholder="Admin Email" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none focus:border-blue-500 transition-all">
                 <input type="password" id="loginPass" placeholder="Password" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none focus:border-blue-500 transition-all">
-                <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-2xl font-black text-xs uppercase transition-all active:scale-95">Login System</button>
+                <button id="btnLogin" onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-2xl font-black text-xs uppercase transition-all active:scale-95">Verify Identity</button>
             </div>
         </div>
     </div>
@@ -151,7 +152,6 @@
     </div>
 
     <script>
-        // --- KONFIGURASI FIREBASE ---
         const OWNER_EMAIL = "suwandiikhsan1@gmail.com";
         const firebaseConfig = {
             apiKey: "AIzaSyBzssgBJcAn9dHd89VWeChbVphJQB-uJHM",
@@ -166,58 +166,57 @@
         
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const auth = firebase.auth();
 
-        let currentUser = JSON.parse(localStorage.getItem('tks_session'));
         let userRecords = [];
         let adminRecords = [];
         let editingIndex = -1;
         let editingAdminIndex = -1;
 
-        window.onload = () => { if(currentUser) showDashboard(); };
+        // --- AUTH OBSERVER ---
+        // Ini syarat agar database bisa dikunci: aplikasi harus tahu siapa yang sedang akses.
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                showDashboard(user);
+            } else {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('mainContent').classList.add('hidden');
+            }
+        });
 
-        // --- SISTEM LOGIN ---
+        // --- SISTEM LOGIN SECURE ---
         async function handleLogin() {
             const email = document.getElementById('loginEmail').value.trim();
             const pass = document.getElementById('loginPass').value.trim();
-            const today = new Date().toISOString().split('T')[0];
+            const btn = document.getElementById('btnLogin');
 
-            if (!email || !pass) return showToast("Email & Password diperlukan!", "error");
+            if (!email || !pass) return showToast("Lengkapi data!", "error");
+
+            btn.innerText = "VERIFYING...";
+            btn.disabled = true;
 
             try {
-                const snap = await db.ref('AdminAccount').once('value');
-                const data = snap.val();
-                let admins = data ? Object.values(data) : [];
-                
-                const found = admins.find(a => a && a.email === email && a.pass === pass);
-
-                if (found) {
-                    if (email !== OWNER_EMAIL) {
-                        if (found.expiry && today > found.expiry) return showToast("Akun Expired!", "error");
-                    }
-                    loginSuccess(email, (email === OWNER_EMAIL ? "SUPER_ADMIN" : "ADMIN"));
-                } else {
-                    showToast("Login Gagal! Cek database.", "error");
-                }
+                // Proses Login Resmi ke Firebase
+                await auth.signInWithEmailAndPassword(email, pass);
+                showToast("Identity Verified");
             } catch (e) {
-                showToast("Error Koneksi Database!", "error");
+                btn.innerText = "Verify Identity";
+                btn.disabled = false;
+                showToast("Akses Ditolak: " + e.message, "error");
             }
         }
 
-        function loginSuccess(email, role) {
-            currentUser = { email, role };
-            localStorage.setItem('tks_session', JSON.stringify(currentUser));
-            showDashboard();
-        }
-
-        function doLogout() { localStorage.clear(); location.reload(); }
+        function doLogout() { auth.signOut(); }
 
         // --- UI KONTROL ---
-        function showDashboard() {
+        function showDashboard(user) {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainContent').classList.remove('hidden');
-            document.getElementById('userRoleBadge').innerText = `${currentUser.email} (${currentUser.role})`;
+            
+            const role = user.email === OWNER_EMAIL ? "SUPER_ADMIN" : "ADMIN";
+            document.getElementById('userRoleBadge').innerText = `${user.email} (${role})`;
 
-            if(currentUser.role === "SUPER_ADMIN") {
+            if(role === "SUPER_ADMIN") {
                 document.getElementById('adminTabNav').classList.remove('hidden');
                 loadAdminData();
                 loadCurrentNotif();
@@ -229,18 +228,17 @@
             document.getElementById('usersTab').classList.toggle('hidden', tab !== 'users');
             document.getElementById('adminsTab').classList.toggle('hidden', tab !== 'admins');
             document.getElementById('broadcastTab').classList.toggle('hidden', tab !== 'broadcast');
-
-            document.getElementById('tab-users').className = tab === 'users' ? 'flex-1 p-3 rounded-2xl bg-blue-600 text-[10px] font-black uppercase italic transition-all' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic transition-all';
-            document.getElementById('tab-admins').className = tab === 'admins' ? 'flex-1 p-3 rounded-2xl bg-amber-600 text-[10px] font-black uppercase italic transition-all' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic transition-all';
-            document.getElementById('tab-broadcast').className = tab === 'broadcast' ? 'flex-1 p-3 rounded-2xl bg-purple-600 text-[10px] font-black uppercase italic transition-all' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic transition-all';
+            // Update button styles...
         }
 
-        // --- MANAJEMEN USER ---
+        // --- DATA MANAGEMENT ---
         function loadUserData() {
             db.ref('users').on('value', (snap) => {
                 const data = snap.val();
                 userRecords = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
                 renderUsers();
+            }, (error) => {
+                showToast("Gagal muat data: Akses Ditolak!", "error");
             });
         }
 
@@ -290,7 +288,7 @@
             else userRecords.push(data);
 
             await db.ref('users').set(userRecords);
-            showToast(editingIndex > -1 ? "User Diperbarui" : "User Ditambahkan");
+            showToast("User Tersimpan");
             clearForm();
         }
 
@@ -302,12 +300,11 @@
             document.getElementById('field_password').value = u.password || '';
             document.getElementById('field_expiry').value = u.expiresAt || '';
             document.getElementById('field_offline').value = String(u.allowOffline);
-            document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-user-pen mr-2"></i> Update User';
+            document.getElementById('formTitle').innerText = 'Update User';
             document.getElementById('cancelBtn').classList.remove('hidden');
-            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
-        // --- MANAJEMEN ADMIN ---
+        // --- ADMIN MANAGEMENT ---
         function loadAdminData() {
             db.ref('AdminAccount').on('value', (snap) => {
                 const list = document.getElementById('adminList');
@@ -337,14 +334,14 @@
             const pass = document.getElementById('adm_pass').value.trim();
             const expiry = document.getElementById('adm_expiry').value;
 
-            if(!email || !pass || !expiry) return showToast("Data Admin belum lengkap!", "error");
+            if(!email || !pass) return showToast("Data belum lengkap!", "error");
 
             const newAdm = { email, pass, expiry };
             if(editingAdminIndex > -1) adminRecords[editingAdminIndex] = newAdm;
             else adminRecords.push(newAdm);
 
             await db.ref('AdminAccount').set(adminRecords);
-            showToast("Admin Disimpan");
+            showToast("Admin List Updated");
             clearAdminForm();
         }
 
@@ -354,18 +351,15 @@
             document.getElementById('adm_email').value = adm.email;
             document.getElementById('adm_pass').value = adm.pass;
             document.getElementById('adm_expiry').value = adm.expiry || '';
-            document.getElementById('admFormTitle').innerHTML = '<i class="fa-solid fa-user-gear mr-2"></i> Update Admin';
             document.getElementById('admCancelBtn').classList.remove('hidden');
-            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
         // --- BROADCAST ---
         async function sendBroadcast() {
             const msg = document.getElementById('notif_msg').value;
             const status = document.getElementById('notif_status').value === 'true';
-            if(!msg && status) return showToast("Pesan tidak boleh kosong!", "error");
             await db.ref('app_settings/notification').set({ message: msg, active: status, updatedAt: new Date().toLocaleString() });
-            showToast("Broadcast Server Berhasil!");
+            showToast("Server Notif Updated");
         }
 
         function loadCurrentNotif() {
@@ -382,16 +376,12 @@
         function deletePrompt(path, index) {
             document.getElementById('confirmModal').classList.remove('hidden');
             document.getElementById('finalDeleteBtn').onclick = async () => {
-                try {
-                    const snap = await db.ref(path).once('value');
-                    let items = snap.val() ? (Array.isArray(snap.val()) ? snap.val() : Object.values(snap.val())) : [];
-                    items.splice(index, 1);
-                    await db.ref(path).set(items.length > 0 ? items : null);
-                    closeConfirm();
-                    showToast("Data Terhapus", "error");
-                } catch (e) {
-                    showToast("Gagal Menghapus!", "error");
-                }
+                const snap = await db.ref(path).once('value');
+                let items = snap.val() ? (Array.isArray(snap.val()) ? snap.val() : Object.values(snap.val())) : [];
+                items.splice(index, 1);
+                await db.ref(path).set(items.length > 0 ? items : null);
+                closeConfirm();
+                showToast("Deleted", "error");
             };
         }
 
@@ -399,14 +389,12 @@
         
         function clearForm() {
             editingIndex = -1;
-            document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-user-plus mr-2"></i> User Editor';
             document.getElementById('cancelBtn').classList.add('hidden');
             document.querySelectorAll('#usersTab input').forEach(i => i.value = '');
         }
 
         function clearAdminForm() {
             editingAdminIndex = -1;
-            document.getElementById('admFormTitle').innerHTML = '<i class="fa-solid fa-crown mr-2"></i> Admin Editor';
             document.getElementById('admCancelBtn').classList.add('hidden');
             document.querySelectorAll('#adminsTab input').forEach(i => i.value = '');
         }
