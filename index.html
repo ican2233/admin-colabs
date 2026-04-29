@@ -11,13 +11,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <style>
         .glass-card { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
-        .toast { position: fixed; top: 20px; right: 20px; z-index: 9999; background: #1e293b; color: white; padding: 12px 20px; border-radius: 12px; font-size: 10px; font-weight: bold; border-left: 4px solid #3b82f6; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body class="bg-[#05070a] text-slate-300 min-h-screen">
-
-    <div id="toast-container"></div>
 
     <div id="loginScreen" class="fixed inset-0 z-[100] bg-[#05070a] flex items-center justify-center p-6">
         <div class="glass-card p-8 rounded-[2rem] w-full max-w-sm border-t-2 border-blue-500">
@@ -51,12 +48,22 @@
     </div>
 
     <script>
-        const firebaseConfig = { databaseURL: "https://panel-2a2fd-default-rtdb.firebaseio.com" };
+        // Data konfigurasi dari Firebase Console
+        const firebaseConfig = {
+          apiKey: "AIzaSyBzssgBJcAn9dHd89VWeChbVphJQB-uJHM",
+          authDomain: "panel-2a2fd.firebaseapp.com",
+          databaseURL: "https://panel-2a2fd-default-rtdb.firebaseio.com",
+          projectId: "panel-2a2fd",
+          storageBucket: "panel-2a2fd.firebasestorage.app",
+          messagingSenderId: "474507285109",
+          appId: "1:474507285109:web:3fbcfe2ebb5a92c25b1e3c",
+          measurementId: "G-8Q9LQXV031"
+        };
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const auth = firebase.auth();
 
-        // Cek Status Login
         auth.onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('loginScreen').classList.add('hidden');
@@ -71,8 +78,11 @@
         async function handleLogin() {
             const e = document.getElementById('loginEmail').value;
             const p = document.getElementById('loginPass').value;
-            try { await auth.signInWithEmailAndPassword(e, p); } 
-            catch (err) { alert("Login Gagal: " + err.message); }
+            try { 
+                await auth.signInWithEmailAndPassword(e, p); 
+            } catch (err) { 
+                alert("Login Gagal: " + err.message); 
+            }
         }
 
         function doLogout() { auth.signOut(); }
@@ -84,15 +94,15 @@
                 let i = 0;
                 snap.forEach(child => {
                     const u = child.val();
-                    const key = child.key; // Ini bisa berupa '0' atau 'Icancan' atau Device ID
+                    const key = child.key;
                     i++;
                     list.innerHTML += `
                         <div class="glass-card p-4 rounded-2xl flex justify-between items-center">
                             <div>
-                                <p class="text-white font-bold text-sm">${u.username || 'No Name'}</p>
-                                <p class="text-[9px] opacity-50">${u.id || key}</p>
+                                <p class="text-white font-bold text-sm uppercase italic">${u.username || 'No Name'}</p>
+                                <p class="text-[9px] opacity-50 font-mono">${u.id || key}</p>
                             </div>
-                            <button onclick="deleteUser('${key}')" class="text-red-500 p-2"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="deleteUser('${key}')" class="text-red-500 p-2"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     `;
                 });
@@ -110,9 +120,12 @@
                 expiresAt: document.getElementById('f_exp').value,
                 allowOffline: true
             };
-            // Kita simpan dengan Device ID sebagai Key agar rapi (tidak pakai 0, 1, 2)
             await db.ref('users/' + id).set(data);
             alert("Berhasil!");
+            // Reset form
+            document.getElementById('f_id').value = '';
+            document.getElementById('f_user').value = '';
+            document.getElementById('f_pass').value = '';
         }
 
         async function deleteUser(key) {
