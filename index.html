@@ -24,9 +24,11 @@
 <body class="bg-[#0b0f1a] min-h-screen pb-20 font-sans text-slate-200">
 
     <div id="toast-container"></div>
+    
     <div id="confirmModal" class="hidden fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center px-6">
         <div class="glass-card p-8 rounded-[2.5rem] w-full max-w-xs border-t-4 border-red-500 text-center">
             <h3 class="text-white font-black uppercase italic mb-2">Hapus Data?</h3>
+            <p class="text-[10px] text-slate-400 mb-4 uppercase">Tindakan ini tidak bisa dibatalkan.</p>
             <div class="flex gap-3 mt-6">
                 <button onclick="closeConfirm()" class="flex-1 bg-slate-800 p-4 rounded-2xl font-black text-[10px] uppercase">Batal</button>
                 <button id="finalDeleteBtn" class="flex-1 bg-red-600 p-4 rounded-2xl font-black text-[10px] uppercase">Hapus</button>
@@ -49,8 +51,6 @@
             </div>
         </div>
     </div>
-    
-    
 
     <div id="mainContent" class="hidden">
         <header class="bg-gradient-to-r from-blue-700 to-indigo-900 p-8 shadow-2xl mb-6 rounded-b-[3rem] text-center relative">
@@ -58,26 +58,6 @@
             <h1 class="text-2xl font-black italic text-white uppercase">TKS Dashboard</h1>
             <p id="userRoleBadge" class="text-[9px] font-bold opacity-70 tracking-widest mt-1"></p>
         </header>
-        
-        <div id="broadcastTab" class="hidden">
-    <div class="glass-card p-6 rounded-[2.5rem] shadow-2xl mb-8 border-l-8 border-purple-500">
-        <h2 class="text-purple-400 font-black text-xs mb-6 uppercase tracking-widest italic">Broadcast Notification</h2>
-        <div class="space-y-4">
-            <textarea id="notif_msg" placeholder="Ketik pesan untuk semua pengguna..." class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none h-32"></textarea>
-            
-            <div class="bg-black/40 p-4 rounded-2xl border border-slate-700 flex justify-between items-center">
-                <span class="text-[10px] font-black uppercase text-slate-500">Status Notif</span>
-                <select id="notif_status" class="bg-purple-600 text-white font-bold text-[10px] px-3 py-1 rounded-lg outline-none">
-                    <option value="true">AKTIF (Muncul di App)</option>
-                    <option value="false">MATI (Sembunyikan)</option>
-                </select>
-            </div>
-            
-            <button onclick="sendBroadcast()" class="w-full bg-purple-600 p-4 rounded-2xl font-black text-xs uppercase">Update Notifikasi</button>
-        </div>
-    </div>
-</div>
-
 
         <div class="max-w-md mx-auto px-4">
             <div id="adminTabNav" class="hidden flex gap-2 mb-6">
@@ -86,13 +66,30 @@
                 <button onclick="switchTab('broadcast')" id="tab-broadcast" class="flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic">Notif</button>
             </div>
 
+            <div id="broadcastTab" class="hidden">
+                <div class="glass-card p-6 rounded-[2.5rem] shadow-2xl mb-8 border-l-8 border-purple-500">
+                    <h2 class="text-purple-400 font-black text-xs mb-6 uppercase tracking-widest italic">Broadcast Notification</h2>
+                    <div class="space-y-4">
+                        <textarea id="notif_msg" placeholder="Ketik pesan untuk semua pengguna..." class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none h-32"></textarea>
+                        <div class="bg-black/40 p-4 rounded-2xl border border-slate-700 flex justify-between items-center">
+                            <span class="text-[10px] font-black uppercase text-slate-500">Status Notif</span>
+                            <select id="notif_status" class="bg-purple-600 text-white font-bold text-[10px] px-3 py-1 rounded-lg outline-none">
+                                <option value="true">AKTIF</option>
+                                <option value="false">MATI</option>
+                            </select>
+                        </div>
+                        <button onclick="sendBroadcast()" class="w-full bg-purple-600 p-4 rounded-2xl font-black text-xs uppercase">Update Notifikasi</button>
+                    </div>
+                </div>
+            </div>
+
             <div id="usersTab">
                 <div class="glass-card p-6 rounded-[2.5rem] shadow-2xl mb-8 border-l-8 border-emerald-500">
-                    <h2 id="formTitle" class="text-emerald-400 font-black text-xs mb-6 uppercase tracking-widest flex items-center">
+                    <h2 id="formTitle" class="text-emerald-400 font-black text-xs mb-6 uppercase tracking-widest flex items-center italic">
                         <i class="fa-solid fa-user-plus mr-2"></i> User Editor
                     </h2>
                     <div class="space-y-4">
-                        <input type="text" id="field_id" placeholder="Device ID" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
+                        <input type="text" id="field_id" placeholder="Device ID (Key)" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
                         <input type="text" id="field_username" placeholder="Username" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
                         <input type="text" id="field_password" placeholder="Password" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
                         <input type="date" id="field_expiry" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
@@ -111,8 +108,8 @@
                 </div>
 
                 <div class="mb-4 flex justify-between items-center px-2">
-                    <h3 class="font-black text-xs uppercase italic">User List (<span id="countUsers">0</span>)</h3>
-                    <input type="text" id="userSearch" onkeyup="renderUsers()" placeholder="Cari..." class="bg-transparent border-b border-slate-700 text-xs outline-none w-24">
+                    <h3 class="font-black text-xs uppercase italic text-blue-400">User List (<span id="countUsers">0</span>)</h3>
+                    <input type="text" id="userSearch" onkeyup="renderUsers()" placeholder="Cari ID/User..." class="bg-transparent border-b border-slate-700 text-xs outline-none w-32">
                 </div>
                 <div id="userList" class="space-y-4"></div>
             </div>
@@ -121,16 +118,27 @@
                 <div class="glass-card p-6 rounded-[2.5rem] shadow-2xl mb-8 border-l-8 border-amber-500">
                     <h2 class="text-amber-400 font-black text-xs mb-6 uppercase tracking-widest italic">Owner Control</h2>
                     <div class="space-y-4">
-    <input type="email" id="adm_email" placeholder="Email Admin Baru" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
-    <input type="text" id="adm_pass" placeholder="Password Admin Baru" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
-    
-    <label class="text-[9px] text-amber-400 font-black ml-2 uppercase">Masa Aktif Admin</label>
-    <input type="date" id="adm_expiry" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
-    
-    <button onclick="saveAdminData()" class="w-full bg-amber-600 p-4 rounded-2xl font-black text-xs uppercase">Simpan Admin</button>
-</div>
-
+                        <input type="email" id="adm_email" placeholder="Email Admin" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
+                        <input type="text" id="adm_pass" placeholder="Password Admin" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
+                        <label class="text-[9px] text-amber-400 font-black ml-2 uppercase">Masa Aktif Admin</label>
+                        <input type="date" id="adm_expiry" class="w-full p-4 bg-black/40 border border-slate-700 rounded-2xl text-sm outline-none">
+                        <button onclick="saveAdminData()" class="w-full bg-amber-600 p-4 rounded-2xl font-black text-xs uppercase">Simpan Akun Admin</button>
+                    </div>
                 </div>
+
+                <div class="glass-card p-6 rounded-[2.5rem] shadow-2xl mb-8 border-l-8 border-blue-500">
+                    <h2 class="text-blue-400 font-black text-xs mb-6 uppercase tracking-widest italic">Maintenance & Backup</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="exportDatabase()" class="bg-blue-600 p-4 rounded-2xl font-black text-[10px] uppercase flex flex-col items-center gap-2">
+                            <i class="fa-solid fa-download text-lg"></i> Backup JSON
+                        </button>
+                        <label class="bg-slate-700 p-4 rounded-2xl font-black text-[10px] uppercase flex flex-col items-center gap-2 cursor-pointer text-center">
+                            <i class="fa-solid fa-upload text-lg"></i> Restore JSON
+                            <input type="file" id="importFile" class="hidden" accept=".json" onchange="importDatabase(event)">
+                        </label>
+                    </div>
+                </div>
+
                 <div id="adminList" class="space-y-4"></div>
             </div>
         </div>
@@ -145,42 +153,33 @@
 
         let currentUser = JSON.parse(localStorage.getItem('tks_session'));
         let userRecords = [];
-        let editingIndex = -1;
-let editingAdminIndex = -1; // Tambahkan ini
+        let editingAdminIndex = -1;
 
         window.onload = () => { if(currentUser) showDashboard(); };
 
         // --- AUTH SYSTEM ---
         async function handleLogin() {
-    const email = document.getElementById('loginEmail').value;
-    const pass = document.getElementById('loginPass').value;
-    const today = new Date().toISOString().split('T')[0]; // Mendapatkan tanggal hari ini (YYYY-MM-DD)
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            const today = new Date().toISOString().split('T')[0];
 
-    if (!email || !pass) return showToast("Isi Email & Password!", "error");
+            if (!email || !pass) return showToast("Isi Email & Password!", "error");
 
-    const snapshot = await db.ref('AdminAccount').once('value');
-    const data = snapshot.val();
-    let admins = Array.isArray(data) ? data : (data ? Object.values(data) : []);
-    
-    const found = admins.find(a => a && a.email === email && a.pass === pass);
+            const snapshot = await db.ref('AdminAccount').once('value');
+            const data = snapshot.val();
+            let admins = Array.isArray(data) ? data : (data ? Object.values(data) : []);
+            
+            const found = admins.find(a => a && a.email === email && a.pass === pass);
 
-    if (found) {
-        // --- LOGIKA EXPIRED ---
-        // Super Admin biasanya tidak diberi expired (selamanya aktif)
-        if (email !== SUPER_ADMIN_EMAIL) {
-            if (found.expiry && today > found.expiry) {
-                return showToast("Akun Admin Expired! Hubungi Owner.", "error");
+            if (found) {
+                if (email !== SUPER_ADMIN_EMAIL) {
+                    if (found.expiry && today > found.expiry) return showToast("Akun Admin Expired!", "error");
+                }
+                loginSuccess(email, (email === SUPER_ADMIN_EMAIL) ? "SUPER_ADMIN" : "ADMIN");
+            } else {
+                showToast("Email/Password Salah!", "error");
             }
         }
-
-        const role = (email === SUPER_ADMIN_EMAIL) ? "SUPER_ADMIN" : "ADMIN";
-        loginSuccess(email, role);
-    } else {
-        showToast("Email/Password Salah!", "error");
-    }
-}
-
-
 
         function loginSuccess(email, role) {
             currentUser = { email, role };
@@ -194,32 +193,32 @@ let editingAdminIndex = -1; // Tambahkan ini
         function showDashboard() {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainContent').classList.remove('hidden');
-            document.getElementById('userRoleBadge').innerText = `Logged in as: ${currentUser.email} (${currentUser.role})`;
+            document.getElementById('userRoleBadge').innerText = `Logged as: ${currentUser.email}`;
 
             if(currentUser.role === "SUPER_ADMIN") {
                 document.getElementById('adminTabNav').classList.remove('hidden');
                 loadAdminData();
             }
             loadUserData();
+            loadCurrentNotif();
         }
 
         function switchTab(tab) {
-    document.getElementById('usersTab').classList.toggle('hidden', tab !== 'users');
-    document.getElementById('adminsTab').classList.toggle('hidden', tab !== 'admins');
-    document.getElementById('broadcastTab').classList.toggle('hidden', tab !== 'broadcast'); // Tambahkan ini
+            document.getElementById('usersTab').classList.toggle('hidden', tab !== 'users');
+            document.getElementById('adminsTab').classList.toggle('hidden', tab !== 'admins');
+            document.getElementById('broadcastTab').classList.toggle('hidden', tab !== 'broadcast');
 
-    // Update warna tombol
-    document.getElementById('tab-users').className = tab === 'users' ? 'flex-1 p-3 rounded-2xl bg-blue-600 text-[10px] font-black uppercase italic' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic';
-    document.getElementById('tab-admins').className = tab === 'admins' ? 'flex-1 p-3 rounded-2xl bg-amber-600 text-[10px] font-black uppercase italic' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic';
-    document.getElementById('tab-broadcast').className = tab === 'broadcast' ? 'flex-1 p-3 rounded-2xl bg-purple-600 text-[10px] font-black uppercase italic' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic';
-}
+            document.getElementById('tab-users').className = tab === 'users' ? 'flex-1 p-3 rounded-2xl bg-blue-600 text-[10px] font-black uppercase italic' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic';
+            document.getElementById('tab-admins').className = tab === 'admins' ? 'flex-1 p-3 rounded-2xl bg-amber-600 text-[10px] font-black uppercase italic' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic';
+            document.getElementById('tab-broadcast').className = tab === 'broadcast' ? 'flex-1 p-3 rounded-2xl bg-purple-600 text-[10px] font-black uppercase italic' : 'flex-1 p-3 rounded-2xl bg-slate-800 text-[10px] font-black uppercase italic';
+        }
 
-
-        // --- USER MANAGEMENT (For All Admins) ---
+        // --- USER MANAGEMENT ---
         function loadUserData() {
             db.ref('users').on('value', (snapshot) => {
                 const data = snapshot.val();
-                userRecords = Array.isArray(data) ? data : (data ? Object.values(data) : []);
+                // Simpan dalam array untuk pencarian, tapi gunakan key asli Firebase untuk hapus/edit
+                userRecords = data ? Object.entries(data).map(([key, val]) => ({...val, firebaseKey: key})) : [];
                 renderUsers();
             });
         }
@@ -230,8 +229,8 @@ let editingAdminIndex = -1; // Tambahkan ini
             list.innerHTML = '';
             let count = 0;
 
-            userRecords.forEach((u, index) => {
-                if(!u) return;
+            userRecords.forEach((u) => {
+                if(!u.id) return;
                 if(query && !u.username.toLowerCase().includes(query) && !u.id.toLowerCase().includes(query)) return;
                 count++;
                 list.innerHTML += `
@@ -242,8 +241,8 @@ let editingAdminIndex = -1; // Tambahkan ini
                                 <p class="text-[9px] opacity-50 font-mono">${u.id}</p>
                             </div>
                             <div class="flex gap-2">
-                                <button onclick="editUser(${index})" class="text-blue-400 p-2 bg-blue-400/10 rounded-lg"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="deletePrompt('users', ${index})" class="text-red-400 p-2 bg-red-400/10 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="editUser('${u.firebaseKey}')" class="text-blue-400 p-2 bg-blue-400/10 rounded-lg"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="deletePrompt('users', '${u.firebaseKey}')" class="text-red-400 p-2 bg-red-400/10 rounded-lg"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                         <div class="mt-4 flex justify-between items-center text-[10px]">
@@ -257,28 +256,28 @@ let editingAdminIndex = -1; // Tambahkan ini
         }
 
         async function saveUserData() {
+            const id = document.getElementById('field_id').value.trim();
+            const username = document.getElementById('field_username').value.trim();
+            if(!id || !username) return showToast("ID & Username Wajib!", "error");
+
             const newUser = {
-                id: document.getElementById('field_id').value,
-                username: document.getElementById('field_username').value,
+                id: id,
+                username: username,
                 password: document.getElementById('field_password').value,
                 expiresAt: document.getElementById('field_expiry').value,
                 allowOffline: document.getElementById('field_offline').value === 'true'
             };
 
-            if(!newUser.id || !newUser.username) return showToast("ID & Username Wajib!", "error");
-
-            if(editingIndex > -1) userRecords[editingIndex] = newUser;
-            else userRecords.push(newUser);
-
-            await db.ref('users').set(userRecords);
-            showToast("User Terupdate");
+            await db.ref('users/' + id).update(newUser);
+            showToast("Data Berhasil Disimpan");
             clearForm();
         }
 
-        function editUser(index) {
-            const u = userRecords[index];
-            editingIndex = index;
+        function editUser(key) {
+            const u = userRecords.find(record => record.firebaseKey === key);
+            if(!u) return;
             document.getElementById('field_id').value = u.id;
+            document.getElementById('field_id').readOnly = true;
             document.getElementById('field_username').value = u.username;
             document.getElementById('field_password').value = u.password;
             document.getElementById('field_expiry').value = u.expiresAt;
@@ -287,137 +286,139 @@ let editingAdminIndex = -1; // Tambahkan ini
             document.getElementById('cancelBtn').classList.remove('hidden');
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
-        function editAdmin(index) {
-    db.ref('AdminAccount').once('value', (snapshot) => {
-        const data = snapshot.val();
-        const admins = Array.isArray(data) ? data : Object.values(data);
-        const adm = admins[index];
-        
-        editingAdminIndex = index;
-        document.getElementById('adm_email').value = adm.email;
-        document.getElementById('adm_pass').value = adm.pass;
-        document.getElementById('adm_expiry').value = adm.expiry || '';
-        
-        showToast("Mode Edit Admin Aktif");
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    });
-}
 
-
-        // --- ADMIN MANAGEMENT (Only for Super Admin) ---
+        // --- ADMIN & BROADCAST ---
         function loadAdminData() {
-    db.ref('AdminAccount').on('value', (snapshot) => {
-        const list = document.getElementById('adminList');
-        list.innerHTML = '';
-        const data = snapshot.val();
-        const admins = Array.isArray(data) ? data : (data ? Object.values(data) : []);
-        
-        admins.forEach((adm, index) => {
-            if(!adm) return;
-            list.innerHTML += `
-                <div class="glass-card p-4 rounded-2xl flex justify-between items-center">
-                    <div>
-                        <p class="text-[10px] font-black text-white italic">${adm.email}</p>
-                        <p class="text-[9px] opacity-40">EXP: ${adm.expiry || 'No Limit'}</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="editAdmin(${index})" class="text-amber-400 p-2 hover:bg-amber-400/10 rounded-lg"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deletePrompt('AdminAccount', ${index})" class="text-red-400 p-2 hover:bg-red-400/10 rounded-lg"><i class="fa-solid fa-user-minus"></i></button>
-                    </div>
-                </div>
-            `;
-        });
-    });
-}
-
-
-async function sendBroadcast() {
-    const msg = document.getElementById('notif_msg').value;
-    const status = document.getElementById('notif_status').value === 'true';
-
-    if(!msg && status) return showToast("Pesan tidak boleh kosong!", "error");
-
-    await db.ref('app_settings/notification').set({
-        message: msg,
-        active: status,
-        updatedAt: new Date().toLocaleString()
-    });
-
-    showToast("Server diperbarui!");
-}
-
-// Tambahkan ini di loadUserData agar pesan saat ini muncul di panel saat dibuka
-function loadCurrentNotif() {
-    db.ref('app_settings/notification').once('value', (snapshot) => {
-        const data = snapshot.val();
-        if(data) {
-            document.getElementById('notif_msg').value = data.message || '';
-            document.getElementById('notif_status').value = String(data.active);
+            db.ref('AdminAccount').on('value', (snapshot) => {
+                const list = document.getElementById('adminList');
+                list.innerHTML = '';
+                const data = snapshot.val();
+                const admins = Array.isArray(data) ? data : (data ? Object.values(data) : []);
+                
+                admins.forEach((adm, index) => {
+                    if(!adm) return;
+                    list.innerHTML += `
+                        <div class="glass-card p-4 rounded-2xl flex justify-between items-center">
+                            <div><p class="text-[10px] font-black text-white italic">${adm.email}</p><p class="text-[9px] opacity-40">EXP: ${adm.expiry || 'No Limit'}</p></div>
+                            <div class="flex gap-2">
+                                <button onclick="editAdmin(${index})" class="text-amber-400 p-2 hover:bg-amber-400/10 rounded-lg"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="deletePrompt('AdminAccount', ${index})" class="text-red-400 p-2 hover:bg-red-400/10 rounded-lg"><i class="fa-solid fa-user-minus"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
         }
-    });
-}
-
-
 
         async function saveAdminData() {
-    const email = document.getElementById('adm_email').value;
-    const pass = document.getElementById('adm_pass').value;
-    const expiry = document.getElementById('adm_expiry').value;
+            const email = document.getElementById('adm_email').value;
+            const pass = document.getElementById('adm_pass').value;
+            const expiry = document.getElementById('adm_expiry').value;
+            if(!email || !pass) return showToast("Email & Pass Wajib!", "error");
 
-    if(!email || !pass || !expiry) return showToast("Lengkapi semua data!", "error");
+            const snapshot = await db.ref('AdminAccount').once('value');
+            let admins = snapshot.val() ? (Array.isArray(snapshot.val()) ? snapshot.val() : Object.values(snapshot.val())) : [];
+            
+            const newAdmin = { email, pass, expiry };
+            if(editingAdminIndex > -1) admins[editingAdminIndex] = newAdmin;
+            else admins.push(newAdmin);
 
-    const snapshot = await db.ref('AdminAccount').once('value');
-    let admins = snapshot.val() ? (Array.isArray(snapshot.val()) ? snapshot.val() : Object.values(snapshot.val())) : [];
-    
-    const newAdmin = { email, pass, expiry };
+            await db.ref('AdminAccount').set(admins);
+            showToast("Admin Diperbarui");
+            editingAdminIndex = -1;
+            document.querySelectorAll('#adminsTab input').forEach(i => i.value = '');
+        }
 
-    if(editingAdminIndex > -1) {
-        admins[editingAdminIndex] = newAdmin;
-        editingAdminIndex = -1; // Reset mode edit
-    } else {
-        // Cek jika email sudah ada untuk mencegah duplikat saat tambah baru
-        const existIdx = admins.findIndex(a => a.email === email);
-        if(existIdx > -1) admins[existIdx] = newAdmin;
-        else admins.push(newAdmin);
-    }
+        function editAdmin(index) {
+            editingAdminIndex = index;
+            db.ref(`AdminAccount/${index}`).once('value', (s) => {
+                const a = s.val();
+                document.getElementById('adm_email').value = a.email;
+                document.getElementById('adm_pass').value = a.pass;
+                document.getElementById('adm_expiry').value = a.expiry || '';
+                showToast("Mode Edit Admin");
+            });
+        }
 
-    await db.ref('AdminAccount').set(admins);
-    showToast("Data Admin Diperbarui");
-    
-    // Reset Form
-    document.getElementById('adm_email').value = ''; 
-    document.getElementById('adm_pass').value = '';
-    document.getElementById('adm_expiry').value = '';
-}
+        async function sendBroadcast() {
+            const msg = document.getElementById('notif_msg').value;
+            const status = document.getElementById('notif_status').value === 'true';
+            await db.ref('app_settings/notification').set({ message: msg, active: status, updatedAt: new Date().toLocaleString() });
+            showToast("Broadcast Terkirim!");
+        }
 
+        function loadCurrentNotif() {
+            db.ref('app_settings/notification').once('value', (snapshot) => {
+                const data = snapshot.val();
+                if(data) {
+                    document.getElementById('notif_msg').value = data.message || '';
+                    document.getElementById('notif_status').value = String(data.active);
+                }
+            });
+        }
 
+        // --- BACKUP & RESTORE ---
+        async function exportDatabase() {
+            try {
+                const snap = await db.ref('/').once('value');
+                const blob = new Blob([JSON.stringify(snap.val(), null, 2)], {type: "application/json"});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `TKS_Backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                showToast("Database Berhasil Diunduh");
+            } catch (e) { showToast("Gagal Backup", "error"); }
+        }
+
+        function importDatabase(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if(confirm("Restore akan menghapus data lama. Lanjutkan?")) {
+                        await db.ref('/').set(data);
+                        showToast("Restore Berhasil! Refresh...");
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                } catch (err) { showToast("File Rusak!", "error"); }
+            };
+            reader.readAsText(file);
+        }
 
         // --- UTILS ---
-        function deletePrompt(path, index) {
+        function deletePrompt(path, identifier) {
             document.getElementById('confirmModal').classList.remove('hidden');
             document.getElementById('finalDeleteBtn').onclick = async () => {
-                const snap = await db.ref(path).once('value');
-                let items = Object.values(snap.val() || {});
-                items.splice(index, 1);
-                await db.ref(path).set(items);
+                if(path === 'users') {
+                    await db.ref('users/' + identifier).remove();
+                } else {
+                    const snap = await db.ref(path).once('value');
+                    let items = Object.values(snap.val() || {});
+                    items.splice(identifier, 1);
+                    await db.ref(path).set(items);
+                }
                 closeConfirm();
                 showToast("Data Dihapus", "error");
             };
         }
 
         function closeConfirm() { document.getElementById('confirmModal').classList.add('hidden'); }
+        
         function clearForm() {
-            editingIndex = -1;
+            document.getElementById('field_id').readOnly = false;
             document.getElementById('formTitle').innerText = "User Editor";
             document.getElementById('cancelBtn').classList.add('hidden');
             document.querySelectorAll('#usersTab input').forEach(i => i.value = '');
         }
+
         function showToast(msg, type="success") {
-            const container = document.getElementById('toast-container');
             const t = document.createElement('div');
             t.className = `toast ${type === 'error' ? 'border-red-500' : 'border-emerald-500'}`;
             t.innerText = msg;
-            container.appendChild(t);
+            document.getElementById('toast-container').appendChild(t);
             setTimeout(() => t.remove(), 2500);
         }
     </script>
